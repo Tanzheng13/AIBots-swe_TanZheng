@@ -166,23 +166,24 @@ async def delete_conversation_by_id(id: str):
 async def queries(request : Request):
     data = await request.json()
     conversation_id = data.get("conversation_id")
-    qrole = data.get("qrole")
+    # qrole = data.get("qrole")
+    qrole = "user"
     qcontent = data.get("qcontent")
     search = conversation_db.find_one({"guid":conversation_id})
-    messages = search["messages"]
-    convo = messages.append({"role" : qrole , "content" : content})
+    message = search["messages"]
+    message.append({"role" : qrole , "content" : qcontent,})
     if not qrole or not qcontent:
         raise HTTPException(status_code=400, detail="Invalid parameters provided")
     
     if DATABASE_URL is None or client is None:
         raise HTTPException(status_code=404, detail="Specified resource(s) not found")
-
+    print(message)
     try: 
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             # messages=[{"role": qrole,"content": qcontent,}])
-            messages=convo)
-
+            messages=message)
+        print("here")
         content = completion.choices[0].message.content
         role = completion.choices[0].message.role
 
@@ -191,11 +192,12 @@ async def queries(request : Request):
         "content": content,
         }
 
-        final_convo =convo.append({"role" : qrole , "content" : content})
+        message.append({"role" : role , "content" : content})
 
-        result = conversation_db.update_one({"guid": conversation_id}, {"$set": {"messages" : final_convo}})
+        result = conversation_db.update_one({"guid": conversation_id}, {"$set": {"messages" : message}})
         if result.modified_count == 1:
-            return {"status": "204", "message": "Successfully updated specified resource(s)"}
+            # return {"status": "204", "message": "Successfully updated specified resource(s)"}
+            return completion.choices[0].message
         else:
             raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
     
