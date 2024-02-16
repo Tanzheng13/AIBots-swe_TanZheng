@@ -195,19 +195,13 @@ async def queries(request : Request):
 
         result = conversation_db.update_one({"guid": conversation_id}, {"$set": {"messages" : final_convo}})
         if result.modified_count == 1:
-            updated_result = conversation_db.find_one({"guid": conversation_id})
             return {"status": "204", "message": "Successfully updated specified resource(s)"}
         else:
             raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
-        
-
-        if debug == True:
-            # print(query_to_insert)
-            print(response_to_insert)
     
-        if debug == True:
-            print(completion.choices[0].message)
-        return completion.choices[0].message
+        # if debug == True:
+        #     print(completion.choices[0].message)
+        # return completion.choices[0].message
 
     except TimeoutError:
         raise HTTPException(status_code=422, detail="Unable to create resource") 
