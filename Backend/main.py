@@ -55,7 +55,7 @@ async def conversations(request : Request):
             "additionalProp1": additionalProp1
         },
         "additionalProp1": additionalProp1o,
-        "message" : []
+        "messages" : []
         }
 
         inserted_id = conversation_db.insert_one(insert_data).inserted_id
@@ -79,7 +79,7 @@ async def conversations_by_id(id:str):
 
         if result == None:
             raise HTTPException(status_code=404, detail="Specified resource(s) was not found") from e
-
+        
         to_return  = {
                 "id" : guid,
                 "name" : result['name'],
@@ -88,7 +88,8 @@ async def conversations_by_id(id:str):
                 "additionalProp1" : {}, 
                 "messages" : result["messages"]
             }
-        return result
+        
+        return to_return
     
     except Exception as e:
     # Catch any other exceptions and raise HTTP 500
@@ -100,17 +101,21 @@ async def update_conversation_by_id(id: str, request : Request):
         data = await request.json()
         params = data["params"]
         guid = id
+
+        if params is None:
+            raise HTTPException(status_code=400, detail="Invalid parameters provided")
         
         # Assuming conversation_db.update_one is a method to update the conversation by ID
         result = conversation_db.update_one({"guid": guid}, {"$set": {"params" : params}})
         if result.modified_count == 1:
             updated_result = conversation_db.find_one({"guid": guid})
-            return {
-                "name": updated_result['name'],
-                "params": updated_result["params"],
-            }
+            # return {
+            #     "name": updated_result['name'],
+            #     "params": updated_result["params"],
+            # }
+            return {"status": "204", "message": "Successfully updated specified resource(s)"}
         else:
-            raise HTTPException(status_code=404, detail="Conversation not found")
+            raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error") from e
@@ -122,7 +127,8 @@ async def conversations(request : Request):
         name_to_find = data.get("name")
         results = conversation_db.find({"name": name_to_find})
         conversation_list = []
-
+        if results is None:
+            return 
         for result in results:
             guid = result["guid"]
             to_insert  = {
@@ -134,9 +140,24 @@ async def conversations(request : Request):
                 "messages" : result["messages"]
             }
             conversation_list.append(to_insert)
+        
         return conversation_list
     except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
+@app.delete("/conversations/{id}")
+async def delete_conversation_by_id(id: str):
+    try:
+        guid = id
+        result = conversation_db.delete_one({"guid": guid})
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
+
+        return {"status": "204", "message": "Successfully deleted specified resource(s)"}
+
+    except Exception as e:
+        # Catch any other exceptions and raise HTTP 500
         raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
@@ -144,21 +165,17 @@ async def conversations(request : Request):
 @app.post("/queries")
 async def queries(request : Request):
     data = await request.json()
-
-    qrole = data.get("role")
-    qcontent = data.get("content")
-    additionalProp1 = data.get("additionalProp1", {})
-    convo = data.get("convo")
-    print(convo)
-
-    if not convo or not qrole or not qcontent:
+    conversation_id = data.get("conversation_id")
+    qrole = data.get("qrole")
+    qcontent = data.get("qcontent")
+    search = conversation_db.find_one({"guid":conversation_id})
+    messages = search["messages"]
+    convo = messages.append({"role" : qrole , "content" : content})
+    if not qrole or not qcontent:
         raise HTTPException(status_code=400, detail="Invalid parameters provided")
     
     if DATABASE_URL is None or client is None:
         raise HTTPException(status_code=404, detail="Specified resource(s) not found")
-
-    guid = uuid.uuid4()
-    guid_str = str(guid)
 
     try: 
         completion = client.chat.completions.create(
@@ -168,20 +185,21 @@ async def queries(request : Request):
 
         content = completion.choices[0].message.content
         role = completion.choices[0].message.role
-        # function_call = completion.choices[0].message.function_call
-        # tool_calls = completion.choices[0].message.tool_calls
 
         response_to_insert = {
-        "content": content,
         "role": role,
-        # "function_call": function_call,
-        # "tool_calls": tool_calls
+        "content": content,
         }
 
-        query_to_insert = {
-            "role" : qrole , 
-            "content" : qcontent
-        }
+        final_convo =convo.append({"role" : qrole , "content" : content})
+
+        result = conversation_db.update_one({"guid": conversation_id}, {"$set": {"messages" : final_convo}})
+        if result.modified_count == 1:
+            updated_result = conversation_db.find_one({"guid": conversation_id})
+            return {"status": "204", "message": "Successfully updated specified resource(s)"}
+        else:
+            raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
+        
 
         if debug == True:
             # print(query_to_insert)
