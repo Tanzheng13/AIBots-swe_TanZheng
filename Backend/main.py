@@ -1,6 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
 
 load_dotenv()
 client = OpenAI(
@@ -9,6 +10,8 @@ client = OpenAI(
 
 DATABASE_URL = os.environ.get("DB")
 DB_NAME = "conversations"
+
+app = FastAPI()
 
 completion = client.chat.completions.create(
   model="gpt-3.5-turbo",
