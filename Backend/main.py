@@ -70,14 +70,16 @@ async def conversations(request : Request):
     # Catch any other exceptions and raise HTTP 500
         raise HTTPException(status_code=500, detail="Internal server error") from e
     
-    
 
 @app.get("/conversations/{id}")
 async def conversations_by_id(id:str):
     try:
         guid = id
         result = conversation_db.find_one({"guid": guid})
-        print(result)
+
+        if result == None:
+            raise HTTPException(status_code=404, detail="Specified resource(s) was not found") from e
+
         to_return  = {
                 "id" : guid,
                 "name" : result['name'],
@@ -90,6 +92,27 @@ async def conversations_by_id(id:str):
     
     except Exception as e:
     # Catch any other exceptions and raise HTTP 500
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+    
+@app.put("/conversations/{id}")
+async def update_conversation_by_id(id: str, request : Request):
+    try:
+        data = await request.json()
+        params = data["params"]
+        guid = id
+        
+        # Assuming conversation_db.update_one is a method to update the conversation by ID
+        result = conversation_db.update_one({"guid": guid}, {"$set": {"params" : params}})
+        if result.modified_count == 1:
+            updated_result = conversation_db.find_one({"guid": guid})
+            return {
+                "name": updated_result['name'],
+                "params": updated_result["params"],
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
+    except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error") from e
     
 @app.get("/conversations")
@@ -145,14 +168,14 @@ async def queries(request : Request):
 
         content = completion.choices[0].message.content
         role = completion.choices[0].message.role
-        function_call = completion.choices[0].message.function_call
-        tool_calls = completion.choices[0].message.tool_calls
+        # function_call = completion.choices[0].message.function_call
+        # tool_calls = completion.choices[0].message.tool_calls
 
         response_to_insert = {
         "content": content,
         "role": role,
-        "function_call": function_call,
-        "tool_calls": tool_calls
+        # "function_call": function_call,
+        # "tool_calls": tool_calls
         }
 
         query_to_insert = {
