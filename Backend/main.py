@@ -2,13 +2,12 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from beanie import init_beanie, Document, init_beanie
-import os
 from openai import OpenAI
 from dotenv import load_dotenv
 from pymongo import MongoClient
-import openai
-import uuid
+import openai , uuid, bson , json , os
 from timeout_decorator import timeout
+from bson import ObjectId
 
 # FastAPI App
 app = FastAPI()
@@ -20,7 +19,7 @@ client = OpenAI(
 )
 
 DATABASE_URL = os.environ.get("DB")
-DB_NAME = "conversations"
+DB_NAME = "conversation"
 
 dbclient = MongoClient(DATABASE_URL)
 database = dbclient[DB_NAME]
@@ -28,86 +27,108 @@ conversation_db = database["conversation"]
 query_db = database["query"]
 debug= False
 
-# Beanie Config
-class ConversationModel(Document):
-    conversation: list
-
-# Initialize Beanie
-async def init():
-    await init_beanie(database_url=DATABASE_URL, document_models=[ConversationModel], database=DB_NAME)
-
-# Dependency to ensure database connection is established
-async def get_db():
-    await init()
-    return ConversationModel
-
-# Data Models
-# class ConversationCreate(BaseModel):
-#     query: str
-
-# class ConversationResponse(BaseModel):
-#     id: str
-#     conversation: list
-#     response: str
-
-class QueryModel:
-    def __init__(self, role, content, additionalProp1):
-        self.role = role
-        self.content = content
-        self.additionalProp1 = additionalProp1
 
 # CRUD Operations
-    
 @app.get("/test")
 def test():
     return "Endpoint Reached"
 
-# @app.post("/conversations", response_model=ConversationResponse)
-# async def create_conversation(conversation_create: ConversationCreate, db: ConversationModel = Depends(get_db)):
-#     # Fetch conversation history from the database
-#     existing_conversation = db.get({})
-#     if not existing_conversation:
-#         existing_conversation = []
-#     else:
-#         existing_conversation = existing_conversation[0].conversation
 
-#     # Add the new query to the conversation
-#     existing_conversation.append(conversation_create.query)
+@app.post("/conversations")
+async def conversations(request : Request):
+    try:
+        guid = uuid.uuid4()
+        guid_str = str(guid)
+        data = await request.json()
 
-#     # Generate response from OpenAI GPT-3
-#     prompt = "\n".join(existing_conversation)
-#     response = openai.complete(prompt)
+        name = data.get("name")
+        additionalProp1 = data.get("additionalProp1")
+        additionalProp1o = data.get("additionalProp1o")
 
-#     # Store anonymized prompt and response in the database
-#     db_id = str(db.id)
-#     await db.update_one({"_id": db_id}, {"$set": {"conversation": existing_conversation}})
+        if not name :
+            raise HTTPException(status_code=400, detail="Invalid parameters provided")
+        
+        insert_data = {
+        "guid" : str(guid), 
+        "name": name,
+        "params": {
+            "additionalProp1": additionalProp1
+        },
+        "additionalProp1": additionalProp1o,
+        "message" : []
+        }
 
-#     return {"id": db_id, "conversation": existing_conversation, "response": response.choices[0].text}
+        inserted_id = conversation_db.insert_one(insert_data).inserted_id
 
-@app.post("/conversation")
-def conversation():
-    guid = uuid.uuid4()
-    guid_str = str(guid)
+        return_data = {
+            "id" : guid_str
+        }
 
+        return return_data
 
+    except Exception as e:
+    # Catch any other exceptions and raise HTTP 500
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+    
+    
 
+@app.get("/conversations/{id}")
+async def conversations_by_id(id:str):
+    try:
+        guid = id
+        result = conversation_db.find_one({"guid": guid})
+        print(result)
+        to_return  = {
+                "id" : guid,
+                "name" : result['name'],
+                "params" : result["params"],
+                "tokens" : 0,
+                "additionalProp1" : {}, 
+                "messages" : result["messages"]
+            }
+        return result
+    
+    except Exception as e:
+    # Catch any other exceptions and raise HTTP 500
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+    
+@app.get("/conversations")
+async def conversations(request : Request):
+    try:
+        data = await request.json()
+        name_to_find = data.get("name")
+        results = conversation_db.find({"name": name_to_find})
+        conversation_list = []
 
-    print("Generated GUID:", guid_str)
-    return guid
+        for result in results:
+            guid = result["guid"]
+            to_insert  = {
+                "id" : guid,
+                "name" : result['name'],
+                "params" : result["params"],
+                "tokens" : 0,
+                "additionalProp1" : {}, 
+                "messages" : result["messages"]
+            }
+            conversation_list.append(to_insert)
+        return conversation_list
+    except Exception as e:
+
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+
 
 @timeout(10)
 @app.post("/queries")
 async def queries(request : Request):
     data = await request.json()
 
-    # qrole = data.get("role")
-    # qcontent = data.get("content")
-    # additionalProp1 = data.get("additionalProp1", {})
+    qrole = data.get("role")
+    qcontent = data.get("content")
+    additionalProp1 = data.get("additionalProp1", {})
     convo = data.get("convo")
     print(convo)
 
-    # if not convo or not qrole or not qcontent:
-    if not convo:
+    if not convo or not qrole or not qcontent:
         raise HTTPException(status_code=400, detail="Invalid parameters provided")
     
     if DATABASE_URL is None or client is None:
@@ -127,7 +148,6 @@ async def queries(request : Request):
         function_call = completion.choices[0].message.function_call
         tool_calls = completion.choices[0].message.tool_calls
 
-
         response_to_insert = {
         "content": content,
         "role": role,
@@ -135,15 +155,18 @@ async def queries(request : Request):
         "tool_calls": tool_calls
         }
 
-        # query_to_insert = {
-        #     "role" : qrole , 
-        #     "content" : qcontent
-        # }
-
+        query_to_insert = {
+            "role" : qrole , 
+            "content" : qcontent
+        }
 
         if debug == True:
             # print(query_to_insert)
             print(response_to_insert)
+    
+        if debug == True:
+            print(completion.choices[0].message)
+        return completion.choices[0].message
 
     except TimeoutError:
         raise HTTPException(status_code=422, detail="Unable to create resource") 
@@ -151,10 +174,6 @@ async def queries(request : Request):
     except Exception as e:
         # Catch any other exceptions and raise HTTP 500
         raise HTTPException(status_code=500, detail="Internal server error") from e
-    
-    if debug == True:
-        print(completion.choices[0].message)
-    return completion.choices[0].message
 
 if __name__ == "__main__":
     import uvicorn
