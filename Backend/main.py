@@ -90,19 +90,24 @@ def conversation():
     guid_str = str(guid)
 
 
+
+
     print("Generated GUID:", guid_str)
     return guid
 
 @timeout(10)
 @app.post("/queries")
-async def conversation(request : Request):
+async def queries(request : Request):
     data = await request.json()
 
-    qrole = data.get("role")
-    qcontent = data.get("content")
-    additionalProp1 = data.get("additionalProp1", {})
+    # qrole = data.get("role")
+    # qcontent = data.get("content")
+    # additionalProp1 = data.get("additionalProp1", {})
+    convo = data.get("convo")
+    print(convo)
 
-    if not qrole or not qcontent:
+    # if not convo or not qrole or not qcontent:
+    if not convo:
         raise HTTPException(status_code=400, detail="Invalid parameters provided")
     
     if DATABASE_URL is None or client is None:
@@ -114,9 +119,8 @@ async def conversation(request : Request):
     try: 
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{
-        "role": qrole,
-        "content": qcontent,}])
+            # messages=[{"role": qrole,"content": qcontent,}])
+            messages=convo)
 
         content = completion.choices[0].message.content
         role = completion.choices[0].message.role
@@ -131,12 +135,14 @@ async def conversation(request : Request):
         "tool_calls": tool_calls
         }
 
-        query_to_insert = {
-            "role" : qrole , 
-            "content" : qcontent
-        }
+        # query_to_insert = {
+        #     "role" : qrole , 
+        #     "content" : qcontent
+        # }
+
+
         if debug == True:
-            print(query_to_insert)
+            # print(query_to_insert)
             print(response_to_insert)
 
     except TimeoutError:
