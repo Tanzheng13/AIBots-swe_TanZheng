@@ -26,7 +26,7 @@ dbclient = MongoClient(DATABASE_URL)
 database = dbclient[DB_NAME]
 conversation_db = database["conversation"]
 query_db = database["query"]
-
+debug= False
 
 # Beanie Config
 class ConversationModel(Document):
@@ -98,11 +98,11 @@ def conversation():
 async def conversation(request : Request):
     data = await request.json()
 
-    role = data.get("role")
-    content = data.get("content")
+    qrole = data.get("role")
+    qcontent = data.get("content")
     additionalProp1 = data.get("additionalProp1", {})
 
-    if not role or not content:
+    if not qrole or not qcontent:
         raise HTTPException(status_code=400, detail="Invalid parameters provided")
     
     if DATABASE_URL is None or client is None:
@@ -115,8 +115,29 @@ async def conversation(request : Request):
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{
+        "role": qrole,
+        "content": qcontent,}])
+
+        content = completion.choices[0].message.content
+        role = completion.choices[0].message.role
+        function_call = completion.choices[0].message.function_call
+        tool_calls = completion.choices[0].message.tool_calls
+
+
+        response_to_insert = {
+        "content": content,
         "role": role,
-        "content": content,}])
+        "function_call": function_call,
+        "tool_calls": tool_calls
+        }
+
+        query_to_insert = {
+            "role" : qrole , 
+            "content" : qcontent
+        }
+        if debug == True:
+            print(query_to_insert)
+            print(response_to_insert)
 
     except TimeoutError:
         raise HTTPException(status_code=422, detail="Unable to create resource") 
@@ -124,8 +145,9 @@ async def conversation(request : Request):
     except Exception as e:
         # Catch any other exceptions and raise HTTP 500
         raise HTTPException(status_code=500, detail="Internal server error") from e
-        
-    print(completion.choices[0].message)
+    
+    if debug == True:
+        print(completion.choices[0].message)
     return completion.choices[0].message
 
 if __name__ == "__main__":
