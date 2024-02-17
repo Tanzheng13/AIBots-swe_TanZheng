@@ -1,13 +1,12 @@
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from beanie import init_beanie, Document, init_beanie
 from openai import OpenAI
 from dotenv import load_dotenv
 from pymongo import MongoClient
-import openai , uuid, bson , json , os
+import uuid,  os
 from timeout_decorator import timeout
-from bson import ObjectId
+from pydantic import BaseModel
+
+from beanie import Document, Indexed, init_beanie
 
 # FastAPI App
 app = FastAPI()
@@ -27,6 +26,10 @@ conversation_db = database["conversation"]
 query_db = database["query"]
 debug= False
 
+class Conversation(BaseModel):
+    name: str
+    params: list
+    additionalProp1: list
 
 # CRUD Operations
 @app.get("/test")

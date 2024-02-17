@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:80"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  mongodb:
+    image: "mongo:latest"
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=examplepassword
+
+  
+# mongodb:
+#   image: mongo:latest
+#   container_name: mongodb
+#   ports:
+#     - "27017:27017"
+#   environment:
+#     MONGO_INITDB_ROOT_USERNAME: rhythmix
+#     MONGO_INITDB_ROOT_PASSWORD: y3s1cs302
+#   volumes:
+#     - ./mongo-scripts:/docker-entrypoint-initdb.d/
+
