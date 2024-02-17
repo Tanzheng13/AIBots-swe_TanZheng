@@ -12,14 +12,14 @@ services:
       - "30000:5000"
     container_name: govtech
 
-# mongodb:
-#   image: mongo:latest
-#   container_name: mongodb
-#   ports:
-#     - "27017:27017"
-#   environment:
-#     MONGO_INITDB_ROOT_USERNAME: rhythmix
-#     MONGO_INITDB_ROOT_PASSWORD: y3s1cs302
-#   volumes:
-#     - ./mongo-scripts:/docker-entrypoint-initdb.d/
+  # mongodb:
+  #   image: mongo:latest
+  #   container_name: mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: 
+  #     MONGO_INITDB_ROOT_PASSWORD: 
+  #   volumes:
+  #     - ./mongo-scripts:/docker-entrypoint-initdb.d/
 
