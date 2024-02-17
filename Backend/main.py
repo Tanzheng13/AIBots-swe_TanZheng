@@ -5,7 +5,6 @@ from pymongo import MongoClient
 import uuid,  os
 from timeout_decorator import timeout
 from pydantic import BaseModel
-
 from beanie import Document, Indexed, init_beanie
 
 # FastAPI App

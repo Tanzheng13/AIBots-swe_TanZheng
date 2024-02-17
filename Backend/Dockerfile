@@ -9,12 +9,16 @@ COPY . /app
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-
+RUN pip install openai --upgrade
 # Make port 80 available to the world outside this container
 EXPOSE 80
 
+# Load environment variables from .env file
+ARG ENV_FILE_PATH="./.env"
+
 # Define environment variable
-ENV NAME World
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+ENV DB=$DB
 
 # Run app.py when the container launches
 CMD ["python", "main.py"]
