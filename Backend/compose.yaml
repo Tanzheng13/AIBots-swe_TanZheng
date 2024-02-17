@@ -5,24 +5,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - '.env'
     ports:
-      - "4000:80"
-    volumes:
-      - .:/app
-    environment:
-      - PYTHONUNBUFFERED=1
+      - "30000:5000"
+    container_name: govtech
 
-  mongodb:
-    image: "mongo:latest"
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=examplepassword
-
-  
 # mongodb:
 #   image: mongo:latest
 #   container_name: mongodb
