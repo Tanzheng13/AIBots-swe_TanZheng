@@ -43,9 +43,25 @@ function App() {
     }
   }
 
+  // function bringBack(convo){
+  //   // console.log(convo)
+
+  //   const fetchConversationById = async () => {
+  //     try {
+  //       const response = await axios.get(`http://localhost:8000/conversations/${convo.id}`);
+  //       setConversationId(response.data.id);
+  //       setChatLog(response.data.messages);
+  //       console.log(chatlog);
+  //       console.log(conversationId);
+  //     } catch (error) {
+  //       console.error("Error fetching conversation:", error);
+  //     }
+  //   };
+  // }
+
   function clearChat(){
     if (conversationId !== ""){
-      setConvoLog([...convoLog, chatlog[1].message]);
+      setConvoLog([...convoLog, {convo: chatlog[1].message , id: conversationId}]);
     }
     axios.post("http://localhost:8000/conversations", {
       name: "user", 
@@ -71,7 +87,7 @@ function App() {
         </span>
         New Chat
       </div>
-      {convoLog.map((convo,index) => <ChatConvo key={index} convo={convo}/>)}
+      {convoLog.map((convo,index) => <ChatConvo key={index} convo={convo}   setConversationId={setConversationId}  setChatLog={setChatLog} />)}
     </aside>
     <section className="chatbox">
       <div className="chat-log">
@@ -105,13 +121,24 @@ const ChatMessage = ({message}) => {
 </div>)
 }
 
-const ChatConvo = ({convo}) => {
-  return (        
-  <div className="convo-button">
-    <div className="side-menu-button" >
-      {convo}
-  </div>
-</div>)
-}
+const ChatConvo = ({ convo, setConversationId, setChatLog }) => {
+  const bringBack = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8000/conversations/${convo.id}`);
+      setConversationId(response.data.id);
+      setChatLog(response.data.messages.map(message => ({ user: message.role, message: message.content })));
+    } catch (error) {
+      console.error("Error fetching conversation:", error);
+    }
+  };
+
+  return (
+    <div className="convo-button">
+      <div className="side-menu-button" onClick={bringBack}>
+        {convo.convo}
+      </div>
+    </div>
+  );
+};
 
 export default App;
