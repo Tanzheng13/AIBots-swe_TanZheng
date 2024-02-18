@@ -2,6 +2,7 @@ Frontend Instructions
 
 1. npm install --global --production windows-build-tools , npm install axios
 2. npm start
+3. Click on create new chat
 
 
 
