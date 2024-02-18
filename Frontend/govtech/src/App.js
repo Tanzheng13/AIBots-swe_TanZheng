@@ -74,7 +74,8 @@ function App() {
         </span>
         New Chat
       </div>
-      {convoLog.map((convo,index) => <ChatConvo key={index} convo={convo}   setConversationId={setConversationId}  setChatLog={setChatLog} setNewConvo={setNewConvo}/>)}
+      {convoLog.map((convo,index) => <ChatConvo key={index} convo={convo}  setConversationId={setConversationId}  
+      setChatLog={setChatLog} setNewConvo={setNewConvo} setConvoLog ={setConvoLog} convoLog={convoLog}/>)}
     </aside>
     <section className="chatbox">
       <div className="chat-log">
@@ -108,7 +109,7 @@ const ChatMessage = ({message}) => {
 </div>)
 }
 
-const ChatConvo = ({ convo, setConversationId, setChatLog , setNewConvo }) => {
+const ChatConvo = ({ convo, setConversationId, setChatLog , setNewConvo , setConvoLog, convoLog }) => {
   const bringBack = async () => {
     try {
       const response = await axios.get(`http://localhost:8000/conversations/${convo.id}`);
@@ -120,13 +121,24 @@ const ChatConvo = ({ convo, setConversationId, setChatLog , setNewConvo }) => {
     }
   };
 
+
+  const deleteConvo = async () => {
+    try {
+      const response = await axios.delete(`http://localhost:8000/conversations/${convo.id}`);
+      const updatedConvoLog = convoLog.filter((c) => c.id !== convo.id);
+      setConvoLog(updatedConvoLog);
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+    }
+  };
+
   return (
     <div className="convo-button-container">
       <div className="convo-button" >
         <div className="side-menu-convo-button" onClick={bringBack}>
           {convo.convo}
         </div>
-        <div className="cross-button" >
+        <div className="cross-button" onClick={deleteConvo}>
           &#10006;
         </div>
       </div>
