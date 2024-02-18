@@ -194,13 +194,11 @@ async def queries(request : Request):
     
     if DATABASE_URL is None or client is None:
         raise HTTPException(status_code=404, detail="Specified resource(s) not found")
-    print(message)
     try: 
         completion = client.chat.completions.create(
             model="gpt-3.5-turbo",
             # messages=[{"role": qrole,"content": qcontent,}])
             messages=message)
-        print("here")
         content = completion.choices[0].message.content
         role = completion.choices[0].message.role
 
@@ -218,10 +216,6 @@ async def queries(request : Request):
         else:
             raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
     
-        # if debug == True:
-        #     print(completion.choices[0].message)
-        # return completion.choices[0].message
-
     except TimeoutError:
         raise HTTPException(status_code=422, detail="Unable to create resource") 
     
