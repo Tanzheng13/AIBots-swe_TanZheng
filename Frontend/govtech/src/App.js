@@ -8,6 +8,7 @@ function App() {
   const [chatlog, setChatLog] = useState([{user: "assistant", message: "How can I help you?"}]);
   const [conversationId, setConversationId] = useState("")
   const [convoLog, setConvoLog] = useState([])
+  const [newconvo, setNewConvo] = useState(1)
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -43,24 +44,9 @@ function App() {
     }
   }
 
-  // function bringBack(convo){
-  //   // console.log(convo)
-
-  //   const fetchConversationById = async () => {
-  //     try {
-  //       const response = await axios.get(`http://localhost:8000/conversations/${convo.id}`);
-  //       setConversationId(response.data.id);
-  //       setChatLog(response.data.messages);
-  //       console.log(chatlog);
-  //       console.log(conversationId);
-  //     } catch (error) {
-  //       console.error("Error fetching conversation:", error);
-  //     }
-  //   };
-  // }
 
   function clearChat(){
-    if (conversationId !== ""){
+    if (conversationId !== "" && newconvo === 1){
       setConvoLog([...convoLog, {convo: chatlog[1].message , id: conversationId}]);
     }
     axios.post("http://localhost:8000/conversations", {
@@ -72,6 +58,7 @@ function App() {
       const newConversationId = response.data.id;
       setConversationId(newConversationId);
       setChatLog([{ user: "assistant", message: "How can I help you?" }]);
+      setNewConvo(1);
     })
     .catch(error => {
       console.error("Error creating conversation:", error);
@@ -87,7 +74,7 @@ function App() {
         </span>
         New Chat
       </div>
-      {convoLog.map((convo,index) => <ChatConvo key={index} convo={convo}   setConversationId={setConversationId}  setChatLog={setChatLog} />)}
+      {convoLog.map((convo,index) => <ChatConvo key={index} convo={convo}   setConversationId={setConversationId}  setChatLog={setChatLog} setNewConvo={setNewConvo}/>)}
     </aside>
     <section className="chatbox">
       <div className="chat-log">
@@ -121,12 +108,13 @@ const ChatMessage = ({message}) => {
 </div>)
 }
 
-const ChatConvo = ({ convo, setConversationId, setChatLog }) => {
+const ChatConvo = ({ convo, setConversationId, setChatLog , setNewConvo }) => {
   const bringBack = async () => {
     try {
       const response = await axios.get(`http://localhost:8000/conversations/${convo.id}`);
       setConversationId(response.data.id);
       setChatLog(response.data.messages.map(message => ({ user: message.role, message: message.content })));
+      setNewConvo(0);
     } catch (error) {
       console.error("Error fetching conversation:", error);
     }
