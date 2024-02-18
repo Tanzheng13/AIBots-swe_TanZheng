@@ -7,20 +7,7 @@ function App() {
   const [input, setInput] = useState("");
   const [chatlog, setChatLog] = useState([{user: "assistant", message: "How can I help you?"}]);
   const [conversationId, setConversationId] = useState("")
-  // const [chatlog, setChatLog] = useState([{user: "gpt", message: "How can I help you?"} , {user: "me", message: "I want to use ChatGPT today"}]);
-//   async function handleSubmittest(e) {
-//     e.preventDefault();
-//    console.log("submit")
-//    setChatLog([...chatlog , {user: "me" , password:`${input}`}]);
-//    setInput("");
-
-//  try {
-//    const response = await axios.get("http://127.0.0.1:8000/test");
-//    console.log(response.data); // Should log "Endpoint Reached" if successful
-//  } catch (error) {
-//    console.error("Error testing endpoint:", error);
-//  }
-//  }
+  
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -30,18 +17,6 @@ function App() {
     setInput("");
   
     if (conversationId === "") {
-      // If conversationId is empty, create a new conversation
-      // try {
-      //   const response = await axios.post("http://localhost:8000/conversations", {
-      //     name: "user", 
-      //     additionalProp1: "", 
-      //     additionalProp1o: "", 
-      //   });
-      //   const newConversationId = response.data.id;
-      //   setConversationId(newConversationId);
-      // } catch (error) {
-      //   console.error("Error creating conversation:", error);
-      // }
       alert("Click on new chat")
     } else {
       const requestData = {
@@ -70,9 +45,9 @@ function App() {
 
   function clearChat(){
     axios.post("http://localhost:8000/conversations", {
-      name: "user", // You may want to customize this
-      additionalProp1: "", // You may want to customize this
-      additionalProp1o: "", // You may want to customize this
+      name: "user", 
+      additionalProp1: "", 
+      additionalProp1o: "", 
     })
     .then(response => {
       const newConversationId = response.data.id;
@@ -83,21 +58,6 @@ function App() {
       console.error("Error creating conversation:", error);
     });
   }
-
-  // async function handleSubmit(e) {
-  //    e.preventDefault();
-  //   console.log("submit")
-  //   setChatLog([...chatlog , {user: "me" , password:`${input}`}]);
-  //   setInput("");
-    
-  //   const response = await fetch("http://localhost:8000/", {method: "POST", 
-  //   headers: {'Content-Type': 'application/json'}, 
-  //   body: JSON.stringify({message: chatlog.map((message)=> message.message).join("")
-  //   })
-  // });
-  // const data = await response.json();
-  // console.log(data)
-  // }
 
   return (
     <div className="App">
