@@ -1,18 +1,33 @@
 import './App.css';
 import "./normal.css";
 import { useState } from "react";
+import axios from 'axios';
 
 function App() {
   const [input, setInput] = useState("");
   const [chatlog, setChatLog] = useState([{user: "gpt", message: "How can I help you?"} , {user: "me", message: "I want to use ChatGPT today"}]);
 
   async function handleSubmit(e) {
-    e.preventDefault();
-    // console.log("submit")
+     e.preventDefault();
+    console.log("submit")
     setChatLog([...chatlog , {user: "me" , password:`${input}`}]);
     setInput("");
-
     
+  //   const response = await fetch("http://localhost:8000/", {method: "POST", 
+  //   headers: {'Content-Type': 'application/json'}, 
+  //   body: JSON.stringify({message: chatlog.map((message)=> message.message).join("")
+  //   })
+  // });
+
+  // const data = await response.json();
+  // console.log(data)
+
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/test");
+    console.log(response.data); // Should log "Endpoint Reached" if successful
+  } catch (error) {
+    console.error("Error testing endpoint:", error);
+  }
   }
 
   return (

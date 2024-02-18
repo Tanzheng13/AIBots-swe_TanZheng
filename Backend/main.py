@@ -6,10 +6,25 @@ import uuid,  os
 from timeout_decorator import timeout
 from pydantic import BaseModel
 from beanie import Document, Indexed, init_beanie
+from fastapi.middleware.cors import CORSMiddleware
 
 # FastAPI App
 app = FastAPI()
 
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 load_dotenv()
 client = OpenAI(
