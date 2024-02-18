@@ -46,7 +46,7 @@ function App() {
 
 
   function clearChat(){
-    if (conversationId !== "" && newconvo === 1){
+    if (conversationId !== "" && newconvo === 1 && chatlog.length !== 1){
       setConvoLog([...convoLog, {convo: chatlog[1].message , id: conversationId}]);
     }
     axios.post("http://localhost:8000/conversations", {
@@ -121,9 +121,14 @@ const ChatConvo = ({ convo, setConversationId, setChatLog , setNewConvo }) => {
   };
 
   return (
-    <div className="convo-button">
-      <div className="side-menu-button" onClick={bringBack}>
-        {convo.convo}
+    <div className="convo-button-container">
+      <div className="convo-button" >
+        <div className="side-menu-convo-button" onClick={bringBack}>
+          {convo.convo}
+        </div>
+        <div className="cross-button" >
+          &#10006;
+        </div>
       </div>
     </div>
   );
