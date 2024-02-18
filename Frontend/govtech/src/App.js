@@ -7,7 +7,7 @@ function App() {
   const [input, setInput] = useState("");
   const [chatlog, setChatLog] = useState([{user: "assistant", message: "How can I help you?"}]);
   const [conversationId, setConversationId] = useState("")
-  
+  const [convoLog, setConvoLog] = useState([])
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -44,6 +44,9 @@ function App() {
   }
 
   function clearChat(){
+    if (conversationId !== ""){
+      setConvoLog([...convoLog, chatlog[1].message]);
+    }
     axios.post("http://localhost:8000/conversations", {
       name: "user", 
       additionalProp1: "", 
@@ -68,6 +71,7 @@ function App() {
         </span>
         New Chat
       </div>
+      {convoLog.map((convo,index) => <ChatConvo key={index} convo={convo}/>)}
     </aside>
     <section className="chatbox">
       <div className="chat-log">
@@ -97,6 +101,15 @@ const ChatMessage = ({message}) => {
     <div className="message">
       {message.message}
     </div>
+  </div>
+</div>)
+}
+
+const ChatConvo = ({convo}) => {
+  return (        
+  <div className="convo-button">
+    <div className="side-menu-button" >
+      {convo}
   </div>
 </div>)
 }

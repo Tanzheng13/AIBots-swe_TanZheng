@@ -19,6 +19,7 @@
   border-radius: 5px;
   text-align: left;
   transition:ease 0.25s;
+  margin-bottom: 3px;
 }
 
 .side-menu-button:hover{
