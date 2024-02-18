@@ -12,14 +12,15 @@ services:
       - "30000:5000"
     container_name: govtech
 
+  # Uncomment this and add username and password
   # mongodb:
   #   image: mongo:latest
-  #   container_name: mongodb
+  #   container_name: mongodbgovtech
   #   ports:
   #     - "27017:27017"
   #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: 
-  #     MONGO_INITDB_ROOT_PASSWORD: 
+  #     MONGO_INITDB_ROOT_USERNAME: tanzheng1312
+  #     MONGO_INITDB_ROOT_PASSWORD: Johnbelinda1!
   #   volumes:
   #     - ./mongo-scripts:/docker-entrypoint-initdb.d/
 
