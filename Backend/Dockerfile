@@ -11,6 +11,17 @@ COPY . /app
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install openai --upgrade
 RUN pip install "pymongo[srv]"
+
+# RUN pip install --no-cache-dir -r requirements.txt
+# RUN pip install uvicorn pip install uvicorn[standard]
+# RUN pip install openai --upgrade
+# RUN pip install "fastapi[all]
+# RUN pip install pip install pymongo
+# RUN pip install "pymongo[srv]"
+# RUN pip install timeout-decorator
+# RUN pip install beanie
+
+
 # Make port 80 available to the world outside this container
 EXPOSE 80
 
