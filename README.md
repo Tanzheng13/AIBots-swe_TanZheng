@@ -1,6 +1,6 @@
 Frontend Instructions
 
-1. npm install --global --production windows-build-tools , npm install -g npm
+1. npm install --global --production windows-build-tools , npm install axios
 2. npm start
 
 
