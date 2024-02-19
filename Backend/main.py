@@ -116,23 +116,46 @@ async def conversations_by_id(id:str):
 async def update_conversation_by_id(id: str, request : Request):
     try:
         data = await request.json()
-        params = data["params"]
+        oldquery = data.get("oldquery")
+        newquery = data.get("newquery")
+        params = data.get("params")
         guid = id
-
         if params is None:
             raise HTTPException(status_code=400, detail="Invalid parameters provided")
         
-        # Assuming conversation_db.update_one is a method to update the conversation by ID
-        result = conversation_db.update_one({"guid": guid}, {"$set": {"params" : params}})
-        if result.modified_count == 1:
-            updated_result = conversation_db.find_one({"guid": guid})
-            # return {
-            #     "name": updated_result['name'],
-            #     "params": updated_result["params"],
-            # }
-            return {"status": "204", "message": "Successfully updated specified resource(s)"}
-        else:
+        to_find = conversation_db.find_one({"guid": guid})
+        if to_find == None:
             raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
+        else:
+            for i, message in enumerate(to_find['messages']):
+                if message == oldquery:
+                    to_find['messages'][i] = newquery
+                    to_find['messages'] = to_find['messages'][:i+1]
+                    break
+            message = to_find['messages']
+            try: 
+                completion = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    # messages=[{"role": qrole,"content": qcontent,}])
+                    messages=message)
+                content = completion.choices[0].message.content
+                role = completion.choices[0].message.role
+
+                message.append({"role" : role , "content" : content})
+
+                result = conversation_db.update_one({"guid": guid}, {"$set": {"messages" : message , "params": params}})
+                if result.modified_count == 1:
+                    # return {"status": "204", "message": "Successfully updated specified resource(s)"}
+                    return completion.choices[0].message
+                else:
+                    raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
+            
+            except TimeoutError:
+                raise HTTPException(status_code=422, detail="Unable to create resource") 
+            
+            except Exception as e:
+                # Catch any other exceptions and raise HTTP 500
+                raise HTTPException(status_code=500, detail="Internal server error") from e
 
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error") from e
@@ -183,9 +206,10 @@ async def delete_conversation_by_id(id: str):
 async def queries(request : Request):
     data = await request.json()
     conversation_id = data.get("conversation_id")
-    # qrole = data.get("qrole")
+    print("here")
     qrole = "user"
     qcontent = data.get("qcontent")
+    params = data.get("params")
     search = conversation_db.find_one({"guid":conversation_id})
     message = search["messages"]
     message.append({"role" : qrole , "content" : qcontent,})
@@ -202,14 +226,9 @@ async def queries(request : Request):
         content = completion.choices[0].message.content
         role = completion.choices[0].message.role
 
-        response_to_insert = {
-        "role": role,
-        "content": content,
-        }
-
         message.append({"role" : role , "content" : content})
 
-        result = conversation_db.update_one({"guid": conversation_id}, {"$set": {"messages" : message}})
+        result = conversation_db.update_one({"guid": conversation_id}, {"$set": {"messages" : message , "params": params}})
         if result.modified_count == 1:
             # return {"status": "204", "message": "Successfully updated specified resource(s)"}
             return completion.choices[0].message
