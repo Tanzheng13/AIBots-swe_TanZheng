@@ -79,7 +79,8 @@ function App() {
     </aside>
     <section className="chatbox">
       <div className="chat-log">
-        {chatlog.map((message,index) => <ChatMessage key={index} message={message} setConversationId={setConversationId} conversationId={conversationId}/>)}
+        {chatlog.map((message,index) => <ChatMessage key={index} message={message} setConversationId={setConversationId} 
+        conversationId={conversationId} setChatLog={setChatLog} chatlog={chatlog}/>)}
       </div>
     <div className="chat-input-holder"> 
       <form onSubmit={handleSubmit}>
@@ -95,7 +96,7 @@ function App() {
 }
 
 
-const ChatMessage = ({message , conversationId}) => {
+const ChatMessage = ({message , conversationId , setChatLog, chatlog}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newQuery, setNewQuery] = useState("");
 
@@ -106,29 +107,39 @@ const ChatMessage = ({message , conversationId}) => {
 
   const saveAndSubmit = async () => {
     try {
-      console.log(conversationId)
-      const response = await axios.put(`/conversations/${conversationId}`, {
-        oldquery: message.message,
-        newquery: newQuery,
-        params: message.params,
-      });
+      const payload = {
+        params: {},
+        oldquery: {
+          role: "user",
+          content: message.message,
+        },
+        newquery: {
+          role: "user",
+          content: newQuery,
+        },
+      };
 
-      // Handle the response as needed
+      // console.log(payload);
+
+      const response = await axios.put(`http://localhost:8000/conversations/${conversationId}`, payload);
+      console.log(response.data)
+      const modifiedChatLog = response.data.map((msg) => ({
+        user: msg.role, 
+        message: msg.content, 
+      }));
+
+      setChatLog(modifiedChatLog);
       if (response.status === 200) {
-        // Handle success (maybe close the editing window)
         setIsEditing(false);
       } else {
-        // Handle other status codes or errors
         console.error("Error saving and submitting query");
       }
     } catch (error) {
-      // Handle network errors or other exceptions
       console.error("Error saving and submitting query", error);
     }
   };
 
   const cancelEdit = () => {
-    // Close the editing window without saving
     setIsEditing(false);
   };
 

@@ -146,7 +146,7 @@ async def update_conversation_by_id(id: str, request : Request):
                 result = conversation_db.update_one({"guid": guid}, {"$set": {"messages" : message , "params": params}})
                 if result.modified_count == 1:
                     # return {"status": "204", "message": "Successfully updated specified resource(s)"}
-                    return completion.choices[0].message
+                    return message
                 else:
                     raise HTTPException(status_code=404, detail="Specified resource(s) was not found")
             
