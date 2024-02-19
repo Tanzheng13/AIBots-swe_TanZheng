@@ -4,7 +4,9 @@ Frontend Instructions
 2. npm start
 3. Click on create new chat
 
-
+build and run dockerfile:
+1. docker build -t frontend .  
+2. run -p 3000:3000 frontend 
 
 Backend Instrcutions
 
@@ -16,3 +18,10 @@ c. pip install pymongo
 d.pip install timeout-decorator
 e. pip install beanie
 4. Run using : python -m uvicorn main:app --reload 
+
+build and run dockerfile
+1. docker compose up -d --build
+or 
+1. docker build -t backend .
+2. docker run -p 8000:8000 --env OPENAI_API_KEY=<your_openai_api_key> --env DB=<your_database_connection_string> backend
+* for the key and string, use "" around the string*
