@@ -7,3 +7,4 @@ openai==0.27.0
 python-dotenv==0.19.1
 pymongo==3.12.0
 timeout-decorator==0.5.0
+pytest==7.2.4
