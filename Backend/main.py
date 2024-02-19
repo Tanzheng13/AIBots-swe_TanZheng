@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from beanie import Document, Indexed, init_beanie
 from fastapi.middleware.cors import CORSMiddleware
 
-
 # FastAPI App
 app = FastAPI()
 

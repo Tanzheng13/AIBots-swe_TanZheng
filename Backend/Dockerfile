@@ -20,6 +20,7 @@ RUN pip install "pymongo[srv]"
 # RUN pip install "pymongo[srv]"
 # RUN pip install timeout-decorator
 # RUN pip install beanie
+# RUN pip install pytest
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
