@@ -79,7 +79,7 @@ function App() {
     </aside>
     <section className="chatbox">
       <div className="chat-log">
-        {chatlog.map((message,index) => <ChatMessage key={index} message={message}/>)}
+        {chatlog.map((message,index) => <ChatMessage key={index} message={message} setConversationId={setConversationId} conversationId={conversationId}/>)}
       </div>
     <div className="chat-input-holder"> 
       <form onSubmit={handleSubmit}>
@@ -95,7 +95,43 @@ function App() {
 }
 
 
-const ChatMessage = ({message}) => {
+const ChatMessage = ({message , conversationId}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [newQuery, setNewQuery] = useState("");
+
+  const editQuery = async (message) => {
+    setIsEditing(true);
+    setNewQuery(message.message);
+  }
+
+  const saveAndSubmit = async () => {
+    try {
+      console.log(conversationId)
+      const response = await axios.put(`/conversations/${conversationId}`, {
+        oldquery: message.message,
+        newquery: newQuery,
+        params: message.params,
+      });
+
+      // Handle the response as needed
+      if (response.status === 200) {
+        // Handle success (maybe close the editing window)
+        setIsEditing(false);
+      } else {
+        // Handle other status codes or errors
+        console.error("Error saving and submitting query");
+      }
+    } catch (error) {
+      // Handle network errors or other exceptions
+      console.error("Error saving and submitting query", error);
+    }
+  };
+
+  const cancelEdit = () => {
+    // Close the editing window without saving
+    setIsEditing(false);
+  };
+
   return (        
   <div className={`chat-message ${message.user   === "assistant" && "chatgpt"}`}>
     <div className="chat-message-center">
@@ -105,7 +141,23 @@ const ChatMessage = ({message}) => {
     <div className="message">
       {message.message}
     </div>
+    {message.user === "me" && (
+          <button className="edit-button" onClick={editQuery}>
+            <span role="img" aria-label="edit" >✏️</span>
+          </button>
+        )}
   </div>
+  {isEditing && (
+        <div className="editing-window">
+          <input
+            type="text"
+            value={newQuery}
+            onChange={(e) => setNewQuery(e.target.value)}
+          />
+          <button onClick={saveAndSubmit}>Save and Submit</button>
+          <button onClick={cancelEdit}>Cancel</button>
+        </div>
+      )}
 </div>)
 }
 
